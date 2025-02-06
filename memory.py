@@ -1,5 +1,5 @@
 import os
-import stramlit as st
+import streamlit as st
 import tempfile
 
 from langchain.document_loaders import PyPDFLoader
