@@ -8,8 +8,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
-
-chat_history = StreamlitChatMessageHistory()
+from langchain.memory import StreamlitChatMessageHistory
 
 __import__('pysqlite3')
 import sys
