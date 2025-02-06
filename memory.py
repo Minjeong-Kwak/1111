@@ -48,7 +48,7 @@ def get_vectorstore(_docs):
 
 @st.cache_resource
 def initialize_components(selected_model):
-    file_path = r"C:\Users\cynic\Downloads\law.pdf"
+    file_path = r"https://github.com/Minjeong-Kwak/1111/blob/main/law.pdf"
     pages = load_and_split_pdf(file_path)
     vectorstore = get_vectorstore(pages)
     retriever = vectorstore.as_retriever()
