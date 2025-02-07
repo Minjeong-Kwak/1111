@@ -14,7 +14,16 @@ from langchain.memory import StreamlitChatMessageHistory
 # Chroma 대신 FAISS 사용
 from langchain.vectorstores import FAISS
 
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+def initialize_components(selected_model):
+    # 디버그 출력
+    st.write("===== DEBUG secrets =====")
+    st.write(st.secrets)  # st.secrets에 어떤 키가 있는지 살펴보기
+
+    if "OPENAI_API_KEY" not in st.secrets:
+        st.write("❌ OPENAI_API_KEY not found in secrets.toml")
+        return None
+
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 @st.cache_resource
 def load_and_split_pdf(file_path):
