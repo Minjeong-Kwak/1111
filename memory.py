@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import tempfile
+import requests
 
 from langchain.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -10,12 +11,9 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain.memory import StreamlitChatMessageHistory
 
+# Chroma 대신 FAISS 사용
+from langchain.vectorstores import FAISS
 
-__import__('pysqlite3')
-import sys
-sys.modules['splite3'] = sys.modules.pop('pysqlite3')
-
-from langchain.vectorstores import Chroma
 os.environ["OPENAI_API_KEY"] = "sk-proj-klVaAx2xZnPRQaK1EIPtT3BlbkFJTm5DBPYnnAFnj1HDwTkN"
 
 @st.cache_resource
@@ -27,25 +25,17 @@ def load_and_split_pdf(file_path):
 def create_vector_store(_docs):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
     split_docs = text_splitter.split_documents(_docs)
-    persist_directory = "./chroma_db"
-    vectorstore = Chroma.from_documents(
+    # FAISS는 persist_directory 없이 in-memory로 생성할 수 있음
+    vectorstore = FAISS.from_documents(
         split_docs, 
-        OpenAIEmbeddings(model='text-embedding-3-small'),
-        persist_directory=persist_directory
+        OpenAIEmbeddings(model='text-embedding-3-small')
     )
     return vectorstore
 
 @st.cache_resource
 def get_vectorstore(_docs):
-    persist_directory = "./chroma_db"
-    if os.path.exists(persist_directory):
-        return Chroma(
-            persist_directory=persist_directory, 
-            embedding_function=OpenAIEmbeddings(model='text-embedding-3-small')
-        )
-    else:
-        return create_vector_store(_docs)
-import requests
+    # FAISS는 간단히 in-memory 벡터스토어를 사용
+    return create_vector_store(_docs)
 
 @st.cache_resource
 def download_pdf_from_github(url):
@@ -100,6 +90,8 @@ def initialize_components(selected_model):
     )
 
     llm = ChatOpenAI(model=selected_model)
+    # 아래 create_history_aware_retriever, create_stuff_documents_chain, create_retrieval_chain 
+    # 함수들은 이미 정의되어 있다고 가정합니다.
     history_aware_retriever = create_history_aware_retriever(llm, retriever, contextualize_q_prompt)
     question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
     rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
