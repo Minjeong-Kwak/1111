@@ -45,38 +45,55 @@ def get_vectorstore(_docs):
         )
     else:
         return create_vector_store(_docs)
+import requests
+
+@st.cache_resource
+def download_pdf_from_github(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        temp_file_path = "downloaded_law.pdf"
+        with open(temp_file_path, "wb") as f:
+            f.write(response.content)
+        return temp_file_path
+    else:
+        raise ValueError(f"파일을 다운로드할 수 없습니다. 상태 코드: {response.status_code}")
 
 @st.cache_resource
 def initialize_components(selected_model):
-    file_path = r"https://github.com/Minjeong-Kwak/1111/blob/main/law.pdf"
+    github_url = "https://raw.githubusercontent.com/Minjeong-Kwak/1111/main/law.pdf"
+    
+    # GitHub에서 PDF 다운로드 후 로컬 경로 가져오기
+    file_path = download_pdf_from_github(github_url)
+    
+    # PDF 로딩
     pages = load_and_split_pdf(file_path)
     vectorstore = get_vectorstore(pages)
     retriever = vectorstore.as_retriever()
     
-    #Define the contextualize question prompt
-    contextualize_q_system_prompt = """Given a chat history and the latest user question \
-    which might reference context in the chat history, formulate a standalone question \
-    which can be understood without the chat histoery. Do Not answer the question, \
-    just reformulate it if needed and otherwise return it as is."""
+    # 기존 코드 유지
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", contextualize_q_system_prompt),
+            ("system", """Given a chat history and the latest user question 
+                          which might reference context in the chat history, 
+                          formulate a standalone question 
+                          which can be understood without the chat history. 
+                          Do not answer the question, just reformulate it 
+                          if needed and otherwise return it as is."""),
             MessagesPlaceholder("history"),
             ("human", "{input}"),
         ]
     )
 
-    #Define the answer question prompt
-    qa_system_prompt = """You are an assistant for question-answering tasks.\
-    Use the following pieces of retrieved context to answer the question. \
-    If you don't know the answer, just say that you don't know. \
-    Keep the answer perfect. please use imogi with the answer. \
-    대답은 한국어로 하고, 존댓말을 써줘. \
-
-    {context}"""
     qa_prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", qa_system_prompt),
+            ("system", """You are an assistant for question-answering tasks. 
+                          Use the following pieces of retrieved context 
+                          to answer the question. 
+                          If you don't know the answer, just say that you don't know. 
+                          Keep the answer perfect. 
+                          Please use emoji with the answer. 
+                          대답은 한국어로 하고, 존댓말을 써줘.
+                          {context}"""),
             MessagesPlaceholder("history"),
             ("human", "{input}"),
         ]
