@@ -37,7 +37,7 @@ def create_vector_store(_docs):
     # FAISS는 persist_directory 없이 in-memory로 생성할 수 있음
     vectorstore = FAISS.from_documents(
         split_docs, 
-        OpenAIEmbeddings(model='text-embedding-3-small')
+        OpenAIEmbeddings(model='text-embedding-ada-002')
     )
     return vectorstore
 
