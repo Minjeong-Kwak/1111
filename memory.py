@@ -14,7 +14,7 @@ from langchain.memory import StreamlitChatMessageHistory
 # Chroma 대신 FAISS 사용
 from langchain.vectorstores import FAISS
 
-os.environ["OPENAI_API_KEY"] = "sk-proj-klVaAx2xZnPRQaK1EIPtT3BlbkFJTm5DBPYnnAFnj1HDwTkN"
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 
 @st.cache_resource
 def load_and_split_pdf(file_path):
