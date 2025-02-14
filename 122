@@ -1,0 +1,32 @@
+import os
+from langchain.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.llms import OpenAI
+from langchain.chains import RetrievalQA
+
+# 벡터 DB 로드 함수 (예외 처리 추가)
+def load_vector_db(path):
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"벡터 DB 경로를 찾을 수 없음: {path}")
+    return FAISS.load_local(path, OpenAIEmbeddings())
+
+# 국내 및 국외 벡터 DB 로드
+vector_db_domestic = load_vector_db("./vector_db_domestic")
+vector_db_international = load_vector_db("./vector_db_international")
+
+# 사용자 질의 입력
+user_query = "고등학생 스포츠 지원 정책을 알려줘"
+
+# 국외 검색 여부 판단 (정규 표현식 활용 가능)
+foreign_keywords = ["국외", "해외", "국제 사례"]
+is_foreign_query = any(keyword in user_query for keyword in foreign_keywords)
+
+# 적절한 벡터 DB 선택
+vector_db = vector_db_international if is_foreign_query else vector_db_domestic
+
+# 검색 실행
+retriever = vector_db.as_retriever()
+qa_chain = RetrievalQA.from_chain_type(llm=OpenAI(model_name="gpt-4"), retriever=retriever)  # 모델 명시
+response = qa_chain.run(user_query)
+
+print(response)
